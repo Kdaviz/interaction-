@@ -123,3 +123,134 @@ mean_and_sd(input_x = x_again)
     ## [25]  1.6348722  2.3231173 -0.6286716 -1.4797904  0.5493942 -0.3367558
 
 Multiple inputs
+---------------
+
+``` r
+sim_data = tibble(
+  x = rnorm(30, mean = 1, sd = 1),
+  y = 2 + 3 * x + rnorm(30, 0, 1)
+)
+
+ls_fit = lm(y ~ x, data = sim_data)
+  
+beta0_hat = coef(ls_fit)[1]
+beta1_hat = coef(ls_fit)[2]
+```
+
+``` r
+sim_regression = function(n, beta0 , beta1) {
+  sim_data = tibble(
+  x = rnorm(n, mean = 1, sd = 1),
+  y = beta0 + beta1 * x + rnorm(n, 0, 1)
+)
+
+ls_fit = lm(y ~ x, data = sim_data)
+
+tibble(  
+beta0_hat = coef(ls_fit)[1],
+beta1_hat = coef(ls_fit)[2]
+)
+}
+
+sim_regression(n = 3000, beta0 = 17, beta1 = -3)
+```
+
+    ## # A tibble: 1 x 2
+    ##   beta0_hat beta1_hat
+    ##       <dbl>     <dbl>
+    ## 1      17.0     -2.99
+
+``` r
+sim_regression(3000, 2, 3)
+```
+
+    ## # A tibble: 1 x 2
+    ##   beta0_hat beta1_hat
+    ##       <dbl>     <dbl>
+    ## 1      2.02      2.98
+
+Scrape lot of Napoleon
+----------------------
+
+``` r
+url = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber=1"
+
+dynamite_html = read_html(url)
+
+review_titles = dynamite_html %>%
+  html_nodes("#cm_cr-review_list .review-title") %>%
+  html_text()
+
+review_stars = dynamite_html %>%
+  html_nodes("#cm_cr-review_list .review-rating") %>%
+  html_text()
+
+review_text = dynamite_html %>%
+    html_nodes(".review-data:nth-child(4)") %>%
+    html_text()
+
+reviews = tibble(
+  title = review_titles,
+  stars = review_stars,
+  text = review_text
+)
+```
+
+Now as a function
+
+``` r
+read_page_review = function(page_url)
+  dynamite_html = read_html(url)
+
+review_titles = dynamite_html %>%
+  html_nodes("#cm_cr-review_list .review-title") %>%
+  html_text()
+
+review_stars = dynamite_html %>%
+  html_nodes("#cm_cr-review_list .review-rating") %>%
+  html_text()
+
+review_text = dynamite_html %>%
+    html_nodes(".review-data:nth-child(4)") %>%
+    html_text()
+
+reviews = tibble(
+  title = review_titles,
+  stars = review_stars,
+  text = review_text
+)
+
+reviews
+```
+
+    ## # A tibble: 10 x 3
+    ##    title                           stars         text                      
+    ##    <chr>                           <chr>         <chr>                     
+    ##  1 "Gotta watch it!\n            " 5.0 out of 5… Format: Prime VideoVerifi…
+    ##  2 "Great movie\n            "     5.0 out of 5… Format: Blu-rayVerified P…
+    ##  3 "Duh\n            "             5.0 out of 5… Format: Prime VideoVerifi…
+    ##  4 "Great video\n            "     5.0 out of 5… Format: DVDVerified Purch…
+    ##  5 "Give me some of your tots\n  … 5.0 out of 5… Format: Prime VideoVerifi…
+    ##  6 "Nostalgic\n            "       5.0 out of 5… Format: Prime VideoVerifi…
+    ##  7 "Make you giggle type movie\n … 5.0 out of 5… Format: Blu-rayVerified P…
+    ##  8 "This movie is so stupid.\n   … 5.0 out of 5… Format: Prime VideoVerifi…
+    ##  9 "Hilarious\n            "       5.0 out of 5… Format: Prime VideoVerifi…
+    ## 10 "Waste of money\n            "  1.0 out of 5… Format: Prime VideoVerifi…
+
+``` r
+read_page_review("https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber=2")
+```
+
+``` r
+f = function(x) {
+  z = x + y
+  z
+}
+
+x = 1
+y = 2
+
+f(x = x)
+```
+
+    ## [1] 3
