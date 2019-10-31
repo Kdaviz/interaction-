@@ -1,0 +1,122 @@
+---
+title: "Simulation"
+author: "Keyanna Davis"
+date: "10/31/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+set.seed(1)
+```
+
+# Time to simulate
+
+```{r}
+
+sim_regression = function(n, beta0 = 2, beta1 = 3) {
+  
+  sim_data = tibble(
+    x = rnorm(n, mean = 1, sd = 1),
+    y = beta0 + beta1 * x + rnorm(n, 0, 1)
+  )
+  
+  ls_fit = lm(y ~ x, data = sim_data)
+  
+  tibble(
+    beta0_hat = coef(ls_fit)[1],
+    beta1_hat = coef(ls_fit)[2]
+  )
+}
+```
+
+```{r}
+sim_regression(n = 30)
+```
+
+## rerun using a for loop
+
+```{r}
+output = vector("list", length = 5000)
+
+for (i in 1:5000) {
+  output[[i]] = sim_regression(n = 30)
+}
+bind_rows(output) %>% 
+  ggplot(aes(x = beta0_hat)) + geom_density()
+
+```
+
+## rerun simulation using `purrr`
+
+```{r}
+output = 
+  rerun(5000, sim_regression(n = 30))
+  bind_rows()
+  
+bind_rows(output) %>% 
+  ggplot(aes(x = beta0_hat)) + geom_density()
+```
+
+```{r}
+bind_rows(output) %>% 
+  ggplot(aes(x = beta0_hat, y = beta1_hat)) + geom_point()
+```
+
+```{r}
+sim_results = 
+  rerun(100, sim_regression(30, 2, 3)) %>% 
+  bind_rows()
+```
+
+
+## try another sample size 
+```{r}
+n_list = list("n_30"  = 30, 
+              "n_60"  = 60, 
+              "n_120" = 120, 
+              "n_240" = 240)
+output = vector("list", length = 4)
+
+for (i in 1:4) {
+  output[[i]] = rerun(1000, sim_regression(n_list[[i]])) %>% 
+    bind_rows
+}
+
+output[[4]] %>% 
+  ggplot(aes(x = beta0_hat)) + geom_density()
+```
+
+
+
+```{r}
+sim_results = 
+  tibble(
+  sample_size = c(30, 60, 120, 240)
+) %>% 
+  mutate(
+    output_list = map(.x = sample_size , ~rerun(1000, sim_regression(n = .x))), 
+    output_df = map(output_list, bind_rows)
+  ) %>% 
+  select(-output_list) %>% 
+  unnest(output_df)
+```
+
+
+```{r}
+sim_results %>% 
+  group_by(sample_size) %>% 
+  summarise(var_b1 = var(beta1_hat))
+```
+
+```{r}
+sim_results %>% 
+  mutate(
+    sample_size = str_c("n = ", sample_size),
+    sample_size = fct_inorder(sample_size))%>% 
+  ggplot(aes(x = beta0_hat, y = beta1_hat)) + 
+  geom_point() + 
+  facet_grid(~sample_size)
+  
+```
+
